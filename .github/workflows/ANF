@@ -1,0 +1,30 @@
+list all ANF resources
+Get-AzResource | ? {$_.ResourceType -like 'Microsoft.NetApp*'} | Format-Table
+
+list all ANF NetApp accounts
+Get-AzResource | ? {$_.ResourceType -like 'Microsoft.NetApp/netAppAccounts'} | Format-Table
+
+list all ANF capacity pools
+Get-AzResource | ? {$_.ResourceType -like 'Microsoft.NetApp/netAppAccounts/capacityPools'} | Format-Table
+
+list all ANF volumes
+Get-AzResource | ? {$_.ResourceType -like 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes'} | Format-Table
+
+
+
+# Connect to the Azure account
+$SubscriptionId = "your-subscription-id"
+Write-Host "Connecting to Azure subscription $($SubscriptionId)."
+Connect-AzAccount -Subscription $SubscriptionId
+
+# Break replication for a specific volume
+$ResourceGroup = "your-resource-group"
+$AccountName = "your-anf-account"
+$PoolName = "your-pool-name"
+$VolumeName = "your-volume-name"
+
+# Approve replication break
+az netappfiles volume replication approve --resource-group $ResourceGroup `
+  --account-name $AccountName `
+  --pool-name $PoolName `
+  --name $VolumeName
