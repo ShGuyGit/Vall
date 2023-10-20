@@ -44,3 +44,9 @@ $($Error.CateGoryInfo)
     }
     Send-MailMessage @FailMailParams   
 } Finally {Add-Content $logfile + "Users ($Users.$Name) matched successfully"}
+
+#error handling
+#} else {
+ #       Write-Host "Group '$group_name' does not exist."
+  #  }
+#}
