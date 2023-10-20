@@ -24,7 +24,8 @@ $PoolName = "your-pool-name"
 $VolumeName = "your-volume-name"
 
 # Approve replication break
-az netappfiles volume replication approve --resource-group $ResourceGroup `
+az netappfiles volume replication suspend
+  --resource-group $ResourceGroup `
   --account-name $AccountName `
   --pool-name $PoolName `
   --name $VolumeName
