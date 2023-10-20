@@ -1,0 +1,20 @@
+#Change User Picture in Active Directory:
+
+#Set the user photo in Active Directory using the Set-ADUser cmdlet. This saves an image file in the thumbnailPhoto attribute.
+Example script:
+$photoPath = "C:\path\to\user\photo.jpg"
+$photoBytes = [byte[]](Get-Content $photoPath -Encoding byte)
+Set-ADUser -Identity "username" -Replace @{thumbnailPhoto=$photoBytes}
+
+Upload Picture to Exchange Online (if AD update fails):
+
+If the AD update fails, you can upload the same photo to Exchange Online using the Set-UserPhoto cmdlet.
+Example script:
+$exchangePhotoPath = "C:\path\to\user\photo.jpg"
+$exchangePhotoBytes = [byte[]](Get-Content $exchangePhotoPath -Encoding byte)
+Set-UserPhoto -Identity "username
+
+#Restore "deleted' mailbox to new shared mailbox
+Get-Mailbox <OldDeletedMailBoxYouWantToRecover> -SoftDeletedMailbox | select guid
+Get-Mailbox <NewMailbox> | select guid
+New-MailboxRestoreRequest -SourceMailbox <guid> -TargetMailbox <guid> -AllowLegacyDNMismatch
