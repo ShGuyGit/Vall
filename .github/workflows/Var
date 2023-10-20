@@ -1,0 +1,133 @@
+#research
+
+$Titles = "Title - User1","Title - Admin1","Title - Admin2"
+
+foreach($Title in $Titles){
+    Get-ADuser -filter {title -eq $Title} | %{Add-ADGroupMember "SDK test print color" $_.SamAccountName} 
+}
+
+
+$folders = @('C:\Crash','C:\Program Files\Common Files','C:\Users\fxavi')
+$folders | ForEach-Object (Add-Content -Path "$_\SampleFile343.txt" -Value "This is the stuff of contents of the file")
+
+#1
+
+# Create an array of folders
+$folders = @('C:\Crash','C:\Program Files\Common Files','C:\Users\fxavi')
+
+# Perform iteration to create the same file in each folder
+foreach ($i in $folders) {Add-Content -Path "$i\SampleFilew.txt" -Value "This is thwe content of the file"}
+
+#2
+$folders = @('C:\Folder','C:\Program Files\Folder2','C:\Folder3')
+$folders.ForEach({Add-Content -Path "$_\SampleFile.txt" -Value "This is the content of the file"})
+
+#3
+$servers = Get-Content .\servers.txt
+
+foreach ($server in $servers) {
+	try {
+		$null = Test-Connection -ComputerName $server -Count 1 -ErrorAction STOP
+		Write-Output "$server - OK"
+	}
+	catch {
+		Write-Output "$server - $($_.Exception.Message)"
+	}
+}
+
+#4
+# Define the TOP-level folder
+$TOP_FOLDER = "C:\ARCHIVE_VOLUMES"
+
+# Get all sub folders recursively
+$Child_Folders = Get-ChildItem -Path $TOP_FOLDER -Recurse | Where-Object { $_.PSIsContainer -eq $true }
+
+# Create a text file in each sub-folder and add the current date/time as value.
+foreach ($foldername in $Child_Folders.FullName) {
+   (get-date -Format G) | Out-File -FilePath "$($foldername)\BackupState.txt" -Force
+}
+
+Get-ChildItem -Recurse -Path C:\ARCHIVE_VOLUMES -Include backupstate.txt | Select-Object Fullname,CreationTime,LastWriteTime,Length
+
+#5
+## Find all BackupState.txt files in C:\ARCHIVE_VOLUMES
+$files = Get-ChildItem -Recurse -Path C:\ARCHIVE_VOLUMES -Include 'BackupState.txt' | Select-Object DirectoryName,FullName
+
+## Read the contents of each file
+foreach ($file in $files) {
+    Write-Output ("$($file.DirectoryName) last backup time - " + (Get-Content $file.FullName))
+}
+
+#6
+## Get a list of automatic services that are stopped.
+$services = Get-Service | Where-Object {$.StartType -eq 'Automatic' -and $.Status -ne 'Running'}
+
+## Pass each service object to the pipeline and process them with the Foreach-Object cmdlet
+$services | ForEach-Object {
+    try {
+        Write-Host "Attempting to start '$($.DisplayName)'"
+        Start-Service -Name $.Name -ErrorAction STOP
+        Write-Host "SUCCESS: '$($.DisplayName)' has been started"
+    } catch {
+        Write-output "FAILED: $($.exception.message)"
+    }
+}
+
+#7
+# Import list of Firstname and Lastname from CSV file
+$newUsers = Import-Csv -Path .\Employees.csv
+
+Add-Type -AssemblyName System.Web
+
+# Process the list
+$newUsers.foreach(
+    {
+        # Generate a random password
+        $password = [System.Web.Security.Membership]::GeneratePassword((Get-Random -Minimum 20 -Maximum 32), 3)
+        $secPw = ConvertTo-SecureString -String $password -AsPlainText -Force
+
+        # Formulate a username
+        $userName = '{0}{1}' -f $_.FirstName.Substring(0, 1), $_.LastName
+
+        # Build new user attributes
+        $NewUserParameters = @{
+            GivenName       = $_.FirstName
+            Surname         = $_.LastName
+            Name            = $userName
+            AccountPassword = $secPw
+        }
+
+        try {
+            New-AdUser @NewUserParameters -ErrorAction Stop
+            Write-Output "User '$($userName)' has been created."
+        }
+        catch {
+            Write-Output $_.Exception.Message
+        }
+    }
+)
+
+
+#8
+#Generate a list of student usernames
+$OuDistinguishedName = "The long ugly distinguished name of the student OU goes here"
+$listOfStudentUserNames = Get-ADUser -SearchBase $OuDistinguishedName -Filter * | 
+                            Select -ExpandProperty SamAccountName
+
+#go through and delete folders for each student name
+foreach($userName in $listOfStudentUserNames){
+    
+    #only bother if the student has a profile on the machine
+    if( Test-Path -Path "C:\Users\$userName" ){
+        #User profile exists
+
+        #Delete the contents of the folders
+        Get-ChildItem -Path "C:\Users\$userName\Downloads" | Remove-Item -Recurse -Force
+        Get-ChildItem -Path "C:\Users\$userName\Videos" | Remove-Item -Recurse -Force
+        #etc, etc...
+    }
+    else{
+        #User profile doesn't exist, skip to next username
+        continue
+    }    
+}
