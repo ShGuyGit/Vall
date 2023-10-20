@@ -24,3 +24,17 @@ foreach($mirror in $mirrors)
     }    
 
 }
+
+#$getForest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest() | Select -ExpandProperty Domains | Select -Last 1
+$DCServers = $getaddomaincontroller | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name}
+$Results = @()
+$hostname = Read-Host "Please provide the hostname"
+$newip = Read-Host "Please provide the new IP"
+$zonename = Read-Host "Please provide the DNS zone"
+foreach ($DC in $DCServers)
+{
+$old = Get-DnsServerResourceRecord -ComputerName $DC -ZoneName $zonename -Name $hostname -RRType A
+$new = Get-DnsServerResourceRecord -ComputerName $DC -ZoneName $zonename -Name $hostname -RRType A
+$new.recorddata.ipv4address=[System.Net.IPAddress]::parse($newip)
+Set-DnsServerResourceRecord -ComputerName $DC -NewInputObject $new -OldInputObject $old -ZoneName "zone.com" -Verbose -ErrorAction SilentlyContinue
+}
