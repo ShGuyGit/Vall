@@ -1,0 +1,26 @@
+#import netapp module
+
+Import-Module dataONTAP;
+
+#connect to the controller managing the volumes for this working environment/instance.
+
+Connect-NaController "Controller IP" 
+#| Out-Null
+
+$mirrors = Get-NaSnapmirror
+
+foreach($mirror in $mirrors)
+
+{
+
+    if($mirror.source -match "Filer02:")
+
+    {
+
+            write-host $mirror.Source $mirror.destination
+
+            Invoke-NaSnapmirrorBreak $mirror.Destination Y #$mirror.Source --confirm switch? 
+
+    }    
+
+}
