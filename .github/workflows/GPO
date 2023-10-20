@@ -1,0 +1,71 @@
+
+#query the domain for the AppLocker Publisher Block Rules (EXE) GPO then building an HTML report saving 
+#to the C:\Temp\AppL-Report.html file location.
+
+Get-GPOReport -Name 'AppLocker Publisher Block Rules (EXE)' -ReportType 'HTML' -Path 'C:\Temp\AppL-Report.html'
+You could alternatively use the Guid parameter to find the GPO but this is an extra step using the below example.
+
+$guid = (Get-GPO -Name 'AppLocker Publisher Block Rules (EXE)').Id
+Get-GPOReport -Guid $guid -ReportType 'HTML' -Path 'C:\Temp\AppL-Report.html'
+
+Get-GPOReport -All -ReportType Html -Path "C:\Temp\All-GPOs.html"
+
+#query an existing GPO called Google Chrome, generating an XML report, and opening it via Invoke-Item in the default app associated with the XML file (probably your default browser).
+
+# Export the XML report for the GPO to an XML file
+Get-GPOReport -Name 'Google Chrome' -ReportType Xml -Path "C:\temp\GoogleChromeGpReport.xml"
+# Open the XML file
+Invoke-Item -Path "C:\Temp\GoogleChromeGpReport.xml"
+#When complete, you will see the XML file generated below.
+
+
+#look at specific settings in a GPO or maybe even eventually use PowerShell to get a GPO linked to an OU 
+
+[xml]$GpoXml = Get-GPOReport -Name 'YourGPOName' -ReportType Xml
+#By casting the XML output of Get-GPOReport to an XML object, you can now easily reference various properties by simple dot notation.
+
+# Check the version information for the Computer part of the GPO
+$GpoXml.GPO.Computer
+# Check the version information for the User part of the GPO
+$GpoXml.GPO.User
+
+
+#find specific attributes for all GPOs in a domain
+
+# Retrieve all GPOs
+$AllGpos = Get-GPO -All
+# Create a custom object holding all the information for each GPO component Version and Enabled state
+$GpoVersionInfo = foreach ($g in $AllGpos) {
+    [xml]$Gpo = Get-GPOReport -ReportType Xml -Guid $g.Id
+    [PSCustomObject]@{
+        "Name" = $Gpo.GPO.Name
+        "Comp-Ad" = $Gpo.GPO.Computer.VersionDirectory
+        "Comp-Sys" = $Gpo.GPO.Computer.VersionSysvol
+        "Comp Ena" = $Gpo.GPO.Computer.Enabled
+        "User-Ad" = $Gpo.GPO.User.VersionDirectory
+        "User-Sys" = $Gpo.GPO.User.VersionSysvol
+        "User Ena" = $Gpo.GPO.User.Enabled
+    }
+}
+# See the result
+$GpoVersionInfo | Sort-Object Name | Format-Table -AutoSize -Wrap
+
+
+#query the Google Chrome GPO and loops through each user setting only returning the Name, State and Supported attributes.
+
+# Get the GPO Guid (just like above)
+$Id = (Get-GPO -DisplayName "Google Chrome").Id
+# Store the output in a (XML) variable
+[xml]$GpoXml = Get-GPOReport -Guid $Id -ReportType Xml
+
+#Create a custom object containing only the policy "fields" we're interested in
+$PolicyDetails = foreach ($p in $GpoXml.GPO.User.ExtensionData.Extension.Policy) {
+    [PSCustomObject]@{
+        "Name" = $p.Name
+        "State" = $p.State
+        "Supported" = $p.Supported
+    }
+}
+
+#Let's see the results
+$PolicyDetails
