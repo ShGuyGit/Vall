@@ -1,3 +1,14 @@
+#computers = "OU=Computers,OU=Company,DC=Poobah,DC=com"
+$computers = @("computer1", "computer2", "computer3")
+foreach ($computer in $computers) {
+    $session = New-PSSession -ComputerName $computer
+    Invoke-Command -Session $session -ScriptBlock {
+        & 'C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe' /update user
+    }
+    Remove-PSSession -Session $session
+}
+
+
 #research
 
 $Titles = "Title - User1","Title - Admin1","Title - Admin2"
