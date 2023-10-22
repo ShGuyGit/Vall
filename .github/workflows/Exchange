@@ -6,14 +6,14 @@ $photoPath = "C:\path\to\user\photo.jpg"
 $photoBytes = [byte[]](Get-Content $photoPath -Encoding byte)
 Set-ADUser -Identity "username" -Replace @{thumbnailPhoto=$photoBytes}
 
-Upload Picture to Exchange Online (if AD update fails):
+#Upload Picture to Exchange Online (if AD update fails):
 
-If the AD update fails, you can upload the same photo to Exchange Online using the Set-UserPhoto cmdlet.
-Example script:
 $exchangePhotoPath = "C:\path\to\user\photo.jpg"
 $exchangePhotoBytes = [byte[]](Get-Content $exchangePhotoPath -Encoding byte)
 Set-UserPhoto -Identity "username
 
+
+#Common tasks
 #Restore "deleted' mailbox to new shared mailbox
 Get-Mailbox <OldDeletedMailBoxYouWantToRecover> -SoftDeletedMailbox | select guid
 Get-Mailbox <NewMailbox> | select guid
