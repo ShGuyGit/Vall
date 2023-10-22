@@ -1,3 +1,4 @@
+#update range of pcs for zero-days
 #computers = "OU=Computers,OU=Company,DC=Poobah,DC=com"
 $computers = @("computer1", "computer2", "computer3")
 foreach ($computer in $computers) {
@@ -7,6 +8,25 @@ foreach ($computer in $computers) {
     }
     Remove-PSSession -Session $session
 }
+
+#find all existing DHCP scopes
+Get-DhcpServerv4Scope
+
+# Create an IPv4 DHCP Server Scope
+ $HashArgs = @{
+     'Name' = 'Head Office Wireless Scope';  # This sets the name of the wireless scope
+     'Description' = 'Wireless Clients';     # This is the human-readable description of the scope
+     'StartRange' = '10.1.0.100';            # Specifies the starting IP address in the scope
+     'EndRange' = '10.1.0.200';              # Specifies the end IP address in the scope
+     'SubnetMask' = '255.255.255.0';         # Specifies the subnet mask of the scope
+     'State' = 'Active';                     # Activates the scope
+     'LeaseDuration' = '1.00:00:00';         # Specifies the length of the lease duration
+ }
+ #Add-DhcpServerv4Scope @HashArgs
+
+
+
+
 
 
 #research
