@@ -9,6 +9,14 @@ foreach ($computer in $computers) {
     Remove-PSSession -Session $session
 }
 
+#last replication status
+echo '-----------'
+echo 'Checking last replication status between XXXX and XXXX sites...'
+echo "-----------"
+Get-ADReplicationLink -SiteName xxxxx | ? { $_.sourceserver -eq 'XXXX' } | select sourceserver,destinationserver,LastSuccessfulsync,lastsyncmessage
+Get-ADReplicationLink -SiteName xxxx | ? { $_.sourceserver -eq 'XXXX' } | select sourceserver,destinationserver,LastSuccessfulsync,lastsyncmessage
+
+
 #find all existing DHCP scopes
 Get-DhcpServerv4Scope
 
