@@ -24,9 +24,141 @@ Get-DhcpServerv4Scope
  }
  #Add-DhcpServerv4Scope @HashArgs
 
+#auditing
+#Present application, security, and system logs in an array.
+ $arrLogs = @(
+     "Application"
+     "Security"
+     "System"
+ )
+ #Use the ForEach-Object cmdlet to target each respective log with the Get-ItemProperty cmdlet.
+ $arrLogs | ForEach-Object {
+     #Use Get-ItemProperty cmdlet to list the configured file path for the application, security, and system log.
+     Get-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\$_ -Name File | Select-Object PSChildName,File
+ }
 
+#Obtain the system's audit policy configuration.
+auditpol /get /category:*
 
+#Set Logon Events to capture Success/Failure activity.
+auditpol /set /subcategory:"Logon" /success:enable /failure:enable
 
+#35 failed logon attempts which will be recorded in your system’s security log to mimic brute force activity.
+Define 5 usernames to record as logon failures.
+ $arrUsers = @(
+     "Jacob"
+     "Jill"
+     "Shannon"
+     "Mr Scary"
+     "User5"
+ )
+ #Loop through usernames using ForEach-Object to generate a logon failure for each one.
+ $arrUsers | ForEach-Object {
+     $securePassword = ConvertTo-SecureString "AtA810GRu13Z%%" -AsPlainText -Force 
+     $storedCredential = New-Object System.Management.Automation.PSCredential($_, $securePassword)
+     Start-Process -FilePath PowerShell -Credential $storedCredential
+ }
+ #Generate 30 logon failures for user User5.
+ $i = 0
+ Do {
+     $securePassword = ConvertTo-SecureString "9723HRTy234X%" -AsPlainText -Force 
+     $storedCredential = New-Object System.Management.Automation.PSCredential("AtaBlogUser", $securePassword)
+     Start-Process -FilePath PowerShell -Credential $storedCredential
+     $i++
+ } Until ($i -eq 30)
+
+#Filter the security log for the first 10 instances of Event ID 4625
+Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
+#(Get-WinEvent -ListProvider 'Microsoft-Windows-Security-Auditing').Events
+#(Get-WinEvent -ListProvider 'Microsoft-Windows-Security-Auditing').Events | Where-Object -Property ID -eq 4625
+#Obtain event XML template for event properties of Event ID 4625.
+ #((Get-WinEvent -ListProvider 'Microsoft-Windows-Security-Auditing').Events | Where-Object -Property ID -eq 4625).Template
+
+#Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 1
+#Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 1 | Select-Object -Property *
+#Output event properties array for the first instance of Event ID 4625
+ $eventProperties = (Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 1).properties
+ $eventProperties
+
+$eventProperties[5].value
+$events = Get-WinEvent -FilterHashTable @{LogName="Security";ID=4625;StartTime=((Get-Date).AddDays(-1));EndTime=(Get-Date)}
+#Extract TargetUserName, LogonType, WorkstationName, and IpAddress event properties from all instances of Event ID 4625 in the last 24 hours.
+ $events | ForEach-Object {
+     ## Reference the properties object property
+     ## Only return the value of indexes 5,10,13 and 19 from the properties array
+     ## Concatenate all values together by joining them with a comma
+     $_.properties[5,10,13,19].value -join ", "
+ }
+
+$logonTypes = @{
+     [uint32]2 = "Interactive"
+     [uint32]3 = "Network"
+     [uint32]4 = "Batch"
+     [uint32]5 = "Service"
+     [uint32]7 = "Unlock"
+     [uint32]8 = "NetworkCleartext"
+     [uint32]9 = "NewCredentials"
+     [uint32]10 = "RemoteInteractive"
+     [uint32]11 = "CachedInteractive"
+ }
+
+#Use Get-WinEvent to access the properties of each logged instance of Event ID 4625
+$events = Get-WinEvent -FilterHashTable @{LogName="Security";ID=4625;StartTime=((Get-Date).AddDays(-1).Date);EndTime=(Get-Date)}
+## Create the numerical value to string "map"
+$logonTypes = @{
+    [uint32]2 = "Interactive"
+    [uint32]3 = "Network"
+    [uint32]4 = "Batch"
+    [uint32]5 = "Service"
+    [uint32]7 = "Unlock"
+    [uint32]8 = "NetworkCleartext"
+    [uint32]9 = "NewCredentials"
+    [uint32]10 = "RemoteInteractive"
+    [uint32]11 = "CachedInteractive"
+}
+## Begin processing each object in the $events array
+$events | ForEach-Object {
+    ## Look up the numerical value in the hashtable
+    $logonType = $logonTypes[$_.properties[10].value] 
+    #Create custom PowerShell object to output relevant event properties 
+    [PSCustomObject]@{     
+        TimeCreated = $_.TimeCreated     
+        TargetUserName = $_.properties[5].value     
+        LogonType = $logonType     
+        WorkstationName = $_.properties[13].value     
+        IpAddress = $_.properties[19].value 
+    }
+} | Format-Table -Wrap
+
+#Use Get-WinEvent to access the properties of each logged instance of Event ID 4625
+$events = Get-WinEvent -FilterHashTable @{LogName="Security";ID=4625;StartTime=((Get-Date).AddDays(-1).Date);EndTime=(Get-Date)}
+## Create the numerical value to string "map"
+$logonTypes = @{
+    [uint32]2 = "Interactive"
+    [uint32]3 = "Network"
+    [uint32]4 = "Batch"
+    [uint32]5 = "Service"
+    [uint32]7 = "Unlock"
+    [uint32]8 = "NetworkCleartext"
+    [uint32]9 = "NewCredentials"
+    [uint32]10 = "RemoteInteractive"
+    [uint32]11 = "CachedInteractive"
+}
+## Begin processing each object in the $events array
+$events | ForEach-Object {
+    ## Look up the numerical value in the hashtable
+    $logonType = $logonTypes[$_.properties[10].value] 
+    #Create custom PowerShell object to output relevant event properties 
+    [PSCustomObject]@{     
+        TimeCreated = $_.TimeCreated     
+        TargetUserName = $_.properties[5].value     
+        LogonType = $logonType     
+        WorkstationName = $_.properties[13].value     
+        IpAddress = $_.properties[19].value 
+    }
+} | Group-Object -Property TargetUserName | Sort-Object -Property Count -Descending
+
+#$services | Group-Object -Property Status | Where {$_.Name -eq 'Stopped'} | Select -ExpandProperty Group
 
 
 #research
