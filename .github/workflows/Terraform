@@ -1,1 +1,32 @@
+#Install-Module -Name Terraform -RequiredVersion 1.0.5
 
+
+# Copy the scripts
+  provisioner "file" {
+    source      = "scripts"
+    destination = "c:/windows/temp"    
+  }
+
+  # Install Chocolatey
+  provisioner "remote-exec" {
+      inline = [         
+          "powershell.exe -ExecutionPolicy Bypass -File C:/Windows/Temp/InstallChocolatey.ps1"
+      ]
+  }
+
+
+#capture Terraform errors in PowerShell desktop
+#5>&1 is Debug level. 2>&1 is error level.
+
+PS C:\Users\me\temp> C:\Users\me\bin\tools\terraform.0.12.31.exe validate
+
+Error: Missing required argument
+
+The argument "features" is required, but no definition was found.
+
+PS C:\Users\me\temp> $tf = C:\Users\me\bin\tools\terraform.0.12.31.exe validate 2>&1
+PS C:\Users\me\temp> $tf
+
+Error: Missing required argument
+
+The argument "features" is required, but no definition was found.
