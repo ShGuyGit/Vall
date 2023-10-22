@@ -7,7 +7,7 @@ Set-DnsServerResourceRecord -NewInputObject $NewObj -OldInputObject $OldObj -Zon
 
 #ex2
 #$getForest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest() | Select -ExpandProperty Domains | Select -Last 1
-$DCServers = $getaddomaincontroller | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name}
+$DCServers = $get-addomaincontroller | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name}
 $Results = @()
 $hostname = Read-Host "Please provide the hostname"
 $newip = Read-Host "Please provide the new IP"
