@@ -19,3 +19,29 @@ $new = Get-DnsServerResourceRecord -ComputerName $DC -ZoneName $zonename -Name $
 $new.recorddata.ipv4address=[System.Net.IPAddress]::parse($newip)
 Set-DnsServerResourceRecord -ComputerName $DC -NewInputObject $new -OldInputObject $old -ZoneName "zone.com" -Verbose -ErrorAction SilentlyContinue
 }
+
+#change clint dns server info
+$computers = "computer1", "computer2", "computer3"
+$dnsServer = "192.168.1.1"
+
+foreach ($computer in $computers) {
+    $adapter = Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter "IPEnabled='True'" -ComputerName $computer
+    $adapter.SetDNSServerSearchOrder($dnsServer)
+}
+
+
+$computers = "computer1", "computer2", "computer3"
+$dnsServers = "192.168.1.1", "192.168.1.2"
+
+foreach ($computer in $computers) {
+    $adapter = Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter "IPEnabled='True'" -ComputerName $computer
+    $adapter.SetDNSServerSearchOrder($dnsServers)
+}
+
+$computers = Import-Csv -Path "C:\temp\computers.csv"
+$dnsServers = "192.168.1.1", "192.168.1.2"
+
+foreach ($computer in $computers) {
+    $adapter = Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter "IPEnabled='True'" -ComputerName $computer.Name
+    $adapter.SetDNSServerSearchOrder($dnsServers)
+}
