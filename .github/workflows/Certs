@@ -1,3 +1,16 @@
+CONTEXT	REGISTRY PATH	EXPLANATION
+User	HKCU:\SOFTWARE\Microsoft\SystemCertificates\	Physical store for user-specific public keys
+User	HKCU:\SOFTWARE\Policies\Microsoft\SystemCertificates\	Physical store for user-specific public keys installed by Active Directory (AD) Group Policy Objects (GPOs)
+Computer	HKLM:\SOFTWARE\Microsoft\SystemCertificates\	Physical store for machine-wide public keys
+Computer	HKLM:\SOFTWARE\Microsoft\Cryptography\Services\	Physical store for keys associated with a specific service
+Computer	HKLM:\SOFTWARE\Policies\Microsoft\SystemCertificates\	Physical store for machine-wide public keys installed by GPOs
+Computer	HKLM:\SOFTWARE\Microsoft\EnterpriseCertificates\	Physical store for machine-wide public keys installed by the Enterprise PKI Containers within an AD domain
+
+CONTEXT	FILE LOCATION	EXPLANATION
+User	$env:APPDATA\Microsoft\SystemCertificates\	Physical store for user-specific public keys and pointers to private keys
+User	$env:APPDATA\Microsoft\Crypto\	Physical store for user-specific private key containers
+Computer	$env:ProgramData\Microsoft\Crypto\	Physical store for machine-wide private key containers
+
 #Get-ChildItem -Path Cert:\LocalMachine\My
 #Get-ChildItem -Path Cert:\CurrentUser\Root\
 #((Get-ChildItem -Path Cert:\CurrentUser\Root\ | select -First 1).Extensions | Where-Object {$_.Oid.FriendlyName -eq "Key Usage"}).format($true)
