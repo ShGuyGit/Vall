@@ -1,0 +1,15 @@
+#Get-ChildItem -Path HKCU:\Software\Microsoft\SystemCertificates\CA\Certificates\
+#Get-ChildItem -Path $env:APPDATA\Microsoft\SystemCertificates\My\Certificates\
+#Get-ChildItem -Path $env:APPDATA\Microsoft\SystemCertificates\My\Keys\
+#Get-ChildItem -Path $env:APPDATA\Microsoft\Crypto\Keys
+
+
+
+Get-ChildItem -Path $env:APPDATA\Microsoft\SystemCertificates\My\Certificates\ | Where-Object {$_.Issuer -notlike "*Microsoft*"} | Select-Object Subject, Issuer, NotAfter
+
+#$serverNames = Get-Content .\servers.txt
+#$serverNames = 'Server1','Server2','Server3'
+$serverName = "SERVER_NAME"
+Invoke-Command -ComputerName $serverName -ScriptBlock {
+    Get-ChildItem -Path $env:APPDATA\Microsoft\SystemCertificates\My\Certificates\ | Where-Object {$_.Issuer -notlike "*Microsoft*"} | Select-Object Subject, Issuer, NotAfter
+}
