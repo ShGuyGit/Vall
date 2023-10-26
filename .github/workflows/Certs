@@ -1,3 +1,30 @@
+#Get-ChildItem -Path Cert:\LocalMachine\My
+#Get-ChildItem -Path Cert:\CurrentUser\Root\
+#((Get-ChildItem -Path Cert:\CurrentUser\Root\ | select -First 1).Extensions | Where-Object {$_.Oid.FriendlyName -eq "Key Usage"}).format($true)
+
+#$thumb = "3943212E679E9FC568D30774AD72D683E5468B0C"
+#Get-ChildItem -Path Cert:\CurrentUser\Root\ | Where-Object {$_.Thumbprint -eq $thumb
+
+#New-SelfSignedCertificate -Subject 'User-Test' -CertStoreLocation 'Cert:\CurrentUser\My'
+#New-SelfSignedCertificate -Subject 'Computer-Test' -CertStoreLocation 'Cert:\LocalMachine\My
+
+#$certificate = Get-Item (Get-ChildItem -Path Cert:\CurrentUser\My\ | Where-Object {$_.Subject -eq $_.Issuer}).PSPath
+#Export-Certificate -FilePath $env:USERPROFILE\Desktop\certificate.cer -Cert $certificate
+#$certificate.HasPrivateKey
+
+#$pfxPassword = "ComplexPassword!" | ConvertTo-SecureString -AsPlainText -Force
+#Export-PfxCertificate -FilePath $env:USERPROFILE\Desktop\certificate.pfx -Password $pfxPassword -Cert $certificate
+#Import-Certificate -FilePath $env:USERPROFILE\Desktop\certificate.cer -CertStoreLocation Cert:\CurrentUser\My
+
+#$pfxPassword = "ComplexPassword!" | ConvertTo-SecureString -AsPlainText -Force
+#Import-PfxCertificate -Exportable -Password $pfxPassword -CertStoreLocation Cert:\CurrentUser\My -FilePath $env:USERPROFILE\Desktop\certificate.pfx
+
+#$certificate = Get-Item (Get-ChildItem -Path Cert:\CurrentUser\My\ | Where-Object {$_.Subject -eq $_.Issuer}).PSPath
+#$certificate.Thumbprint
+#$certificate.SerialNumber
+#$certificate.Subject
+#$certificate | Remove-Item
+
 #Get-ChildItem -Path HKCU:\Software\Microsoft\SystemCertificates\CA\Certificates\
 #Get-ChildItem -Path $env:APPDATA\Microsoft\SystemCertificates\My\Certificates\
 #Get-ChildItem -Path $env:APPDATA\Microsoft\SystemCertificates\My\Keys\
