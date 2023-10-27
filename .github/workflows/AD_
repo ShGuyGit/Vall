@@ -18,12 +18,10 @@ $EmailTo = "recipientemail@recipientdomain.com"
 $Subject = "AD Replication Status"
 $Body = Get-Content C:\Temp\ReplicationStatus.txt | Out-String
 $SMTPServer = "smtp.yourdomain.com"
-$SMTPPort = "587"
-$SMTPUsername = "youremail@yourdomain.com"
-$SMTPPassword = "yourpassword"
+
 
 $SMTPMessage = New-Object System.Net.Mail.MailMessage($EmailFrom, $EmailTo, $Subject, $Body)
 $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, $SmtpPort)
 $SMTPClient.EnableSsl = $true
-$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPUsername, $SMTPPassword)
+#$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPUsername, $SMTPPassword)
 $SMTPClient.Send($SMTPMessage)
