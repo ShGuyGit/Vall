@@ -32,6 +32,167 @@ Get-DhcpServerv4Scope
  }
  #Add-DhcpServerv4Scope @HashArgs
 
+
+Configuring DHCP failover and load balancing
+The basic installation and configuration of a single DHCP server, as shown in the two previous recipes, is straightforward. 
+However, a single DHCP server represents a single point of failure. A standard solution to this shortcoming is to implement DHCP Failover and Load Balancing. 
+Microsoft added this to DHCP with Windows 2012. This feature, and indeed DHCP, is still provided with Server 2019.
+
+Getting ready
+This recipe requires two servers, with one server (DC1) set up with a working and configured DHCP scope. 
+You achieved this by using the Configuring and authorizing a DHCP server and Configure DHCP scopes recipes. This recipe needs a second server (in this case, DC2.Reskit.Org).
+
+How to do it...
+Install the DHCP server feature on DC2:
+
+$FHT = @{
+  Name         = 'DHCP','RSAT-DHCP'
+  ComputerName = 'DC2.Reskit.Org'
+}
+Install-WindowsFeature @FHT
+
+Copy
+Let DHCP know it's all configured on DC2:
+
+$IPHT = @{
+  Path   = 'HKLM:\SOFTWARE\Microsoft\ServerManager\Roles\12'
+  Name   = 'ConfigurationState'
+  Value  = 2
+}
+Set-ItemProperty @IPHT
+
+Copy
+Authorize the DHCP server in AD and view the results:
+
+Add-DhcpServerInDC -DnsName DC2.Reskit.Org
+
+Copy
+View the DHCP servers that are authorized in the domain:
+
+Get-DhcpServerInDC
+
+Copy
+Configure DHCP failover and load balancing between DC1 and DC2:
+
+$FHT= @{
+  ComputerName       = 'DC1.Reskit.Org'
+  PartnerServer      = 'DC2.Reskit.Org'
+  Name               = 'DC1-DC2'
+  ScopeID            = '10.10.10.0'
+  LoadBalancePercent = 60
+  SharedSecret       = 'j3RryIsG0d!'
+  Force              = $true
+}
+Add-DhcpServerv4Failover @FHT
+
+Copy
+Get active leases in the scope (from both servers):
+
+'DC1', 'DC2' |
+    ForEach-Object {Get-DhcpServerv4Scope -ComputerName $_}
+
+Copy
+Now, get server statistics from both servers:
+
+'DC1', 'DC2' |
+ForEach-Object {
+    Get-DhcpServerv4ScopeStatistics -ComputerName $_}
+
+Copy
+How it works...
+In step 1, you added the DHCP server feature to DC2.Reskit.org, which looks like this:
+
+
+In step 2, you set a registry key to indicate to Windows that DHCP is fully configured. In step 3, you authorized this DHCP server in the AD. There is no output from either of these two steps.
+
+In step 4, you viewed details about the authorized DHCP servers in the Reskit.Org domain, which looks like this:
+
+
+In step 5, you configured DC1 and DC2 to be in a failover and load-balancing state. This step produces no output.
+
+In step 6, you viewed the active leases on each DHCP server, which looks like this:
+
+
+There's more
+In step 2, you set a registry key on the DHCP server that indicates that the DHCP server service is fully installed. If you install DHCP using the Server Manager (GUI), this step is performed automatically.
+
+With step 3, you authorized this DHCP server in Active Directory. Without this step, the DHCP service on DC2 would never start up fully. 
+This is intended to ensure that only authorized DHCP servers can hand out DHCP addresses. In step 4, you viewed the authorized servers in the domain.
+
+In step 5, you set up DC2 as a failover and load-balancing DHCP server (with DC1 as the other partner in the relationship). As you can see in step 6, both DHCP servers are synchronized (with 3 addresses used and 47 free).
+
+
+How to Convert DHCP Leases to Reservations Using PowerShell
+Leave a reply
+As a system administrator, you might have to manage a Windows DHCP server and convert DHCP leases to reservations at some point. However, this can be a tedious task if you have many leases to convert. Fortunately, PowerShell can automate this process, making it much easier and faster. This post provides a step-by-step guide on how to convert DHCP leases to reservations using PowerShell.
+
+Step 1: Open PowerShell
+
+The first step is to open PowerShell with administrative privileges on the Windows DHCP server. You can do this by right-clicking on the PowerShell icon and selecting “Run as administrator.”
+
+Step 2: Define the Functions
+
+Copy and paste the following functions into PowerShell:
+
+function Convert-DhcpLeasesToReservations
+{
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$ScopeId,
+
+        [Parameter()]
+        [switch]$WhatIf
+    )
+
+    $leases = Get-DhcpServerv4Lease -ComputerName localhost -ScopeId $ScopeId
+
+    foreach ($lease in $leases)
+    {
+        $reservation = New-DhcpServerv4Reservation -IPAddress $lease.IPAddress -ClientId $lease.ClientId -ScopeId $lease.ScopeId -Description "Converted from DHCP lease"
+        if (!$WhatIf) {
+            Add-DhcpServerv4Reservation -ComputerName localhost -Reservation $reservation
+        }
+    }
+
+    Write-Host "All DHCP leases within scope $ScopeId have been converted to reservations"
+}
+
+function Convert-DhcpLeasesToReservationsByFilter
+{
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$Filter,
+
+        [Parameter()]
+        [switch]$WhatIf
+    )
+
+    $scopes = Get-DhcpServerv4Scope -ComputerName localhost | Where-Object { $_.Name -like $Filter }
+
+    foreach ($scope in $scopes)
+    {
+        Convert-DhcpLeasesToReservations -ScopeId $scope.ScopeId -WhatIf:$WhatIf
+    }
+}
+Step 3: Run the Functions
+
+To use these functions, you need to run Convert-DhcpLeasesToReservationsByFilter and specify the filter to select the DHCP scopes you want to convert DHCP leases to reservations. For instance, you can run:
+
+Convert-DhcpLeasesToReservationsByFilter -Filter "192.168.*"
+This command will convert all DHCP leases within the scopes that match the filter “192.168.*” to reservations.
+
+You can also use the -WhatIf parameter to simulate the execution of the function without making any changes. This helps you to see what the function will do before actually running it. For instance, you can run:
+
+Convert-DhcpLeasesToReservationsByFilter -Filter "192.168.*" -WhatIf
+This command will display the details of the actions the function will perform, but it will not execute them.
+
+Conclusion:
+
+Using PowerShell to convert DHCP leases to reservations can save you time and effort. 
+The functions provided in this blog post simplify the process, allowing you to automate the conversion of DHCP leases to reservations in a few simple steps. 
+By following the steps outlined above, you can easily and quickly convert DHCP leases to reservations on your Windows DHCP server.
+
+
 #auditing
 #Present application, security, and system logs in an array.
  $arrLogs = @(
