@@ -44,7 +44,8 @@ ForEach ($User in $Users) {
 }
 
 
-Cleanup shouldn't just be removing inactive accounts and whatnot. It should also be a review of security ACLs and ways that an attacker can gain access. Check out Sharphound/bloodhound. It will perform an attack path analysis for you that you can use to improve how things are set up. Forest-Druid can do something similar. Run PurpleKnight and fix what it recommends. Run PingCastle and do the same thing.
+Cleanup shouldn't just be removing inactive accounts and whatnot. It should also be a review of security ACLs and ways that an attacker can gain access. 
+
 
 Limit the use of Domain Admins and other Privileged Groups
 Use at least two accounts
@@ -95,7 +96,7 @@ Your OU structure is always dynamic, as new objects are created regularly. So, d
 
 ex.
 domain.tld ->
- ORG -> (yes, a simple OU named 'ORG')
+ ORG -> 
    > Servers ->
      > RDS
 	 > Regular
@@ -108,7 +109,7 @@ domain.tld ->
    > Users -> 
 	 > Regular ->
 	   > HighSecurityAccounts
-	   > Karens
+	   > Kens
 	   > CommonPeople
 	 > ExternalUsers / Contractors
    > Workstations -> 
