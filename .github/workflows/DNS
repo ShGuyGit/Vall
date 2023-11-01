@@ -45,3 +45,62 @@ foreach ($computer in $computers) {
     $adapter = Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter "IPEnabled='True'" -ComputerName $computer.Name
     $adapter.SetDNSServerSearchOrder($dnsServers)
 }
+
+A DNS pointer record (PTR for short) provides the domain name associated with an IP address. 
+A DNS PTR record is exactly the opposite of the 'A' record, which provides the IP address associated with a domain name. 
+DNS PTR records are used in reverse DNS lookups.
+
+The DNS zones can be classified into the following types:
+
+Primary Zone.A DNS server hosting a primary zone is the primary source for information about this zone.
+There could be only one Master zone on one DNS server at a time.
+
+Active Directory Integrated Zone.Integrated zones can be replicated to all domain controllers in the domain and forest.
+
+Secondary Zone.A secondary zone is a read-only copy of a primary zone.
+Use them for better performance, for hiding your Primary, for backup and redundancy.
+
+Stub Zone.A stub zone only contains information about the authoritative name servers for the zone. 
+In conditional forwarding, you hardcode your DNS server with the IP addresses used to contact the authoritative DNS servers.
+In a stub zone, the forwarding IP(s) are used to retrieve the NS records of the authoritative domain as well as the A records needed to resolve the hostnames in the NS records. 
+Your DNS server will continue to look at the NS records on the authoritative DNS server, and if they change, this is reflected in your stub zone. 
+This means that if a DNS server changes, your stub zone forwarding will become aware of this. If a new DNS server is introduced, your DNS server will automatically start using that new server.
+
+Forward Lookup Zone.Forward lookup zones are used to map a host name to an IP address.
+
+Reverse Lookup Zone.DNS also provides a reverse lookup process, in which clients use a known IP address and look up a computer name based on its address.
+This type of zone is generally created when a corporate merger or acquire and DNS servers for two separate DNS namespaces resolve names for clients in both namespaces.
+
+DNS Zone VS. Domain
+In the domain namespace, the biggest difference between the domains and zones is that domains provide logical structure, and the zones provide an administrative structure. 
+
+A domain is a subtree of the domain namespace. It shares its name with that of the top-most node, like yoursite.eu (eu domain). It could be divided into various zones that can be controlled separately.
+
+A zone is a partition of the domain namespace that requires a Primary nameserver and can be managed separately. A zone can coincide with the domain and covers all of its subdomains, or it could be just a partition of the domain. 
+You could have separate zones for mail.yoursite.com and ftp.yoursite.com for your domain yoursite.com.
+
+
+DNS over HTTPS (DoH) is a protocol for performing remote Domain Name System (DNS) resolution via the HTTPS protocol. A goal of the method is to increase user privacy and security by preventing eavesdropping and manipulation of DNS data by man-in-the-middle attacks
+
+Root hints are a list of the DNS servers on the Internet that your DNS servers can use to resolve queries for names that it does not know. 
+When a DNS server cannot resolve a name query by using its local data, it uses its root hints to send the query to a DNS server.
+
+
+Check IP configuration
+Open a Command Prompt window as an administrator on the client computer.
+
+Run the following command:
+
+Windows Command Prompt
+
+Copy
+ipconfig /all
+Verify that the client has a valid IP address, subnet mask, and default gateway for the network to which it is attached and being used.
+
+Check the DNS servers that are listed in the output, and verify that the IP addresses listed are correct.
+
+Check the connection-specific DNS suffix in the output and verify that it is correct.
+
+If the client does not have a valid TCP/IP configuration, use one of the following methods:
+
+For dynamically configured clients, use the ipconfig /renew command to manually force the client to renew its IP address configuration with the DHCP server.
