@@ -1,3 +1,21 @@
+# Define the list of servers to monitor
+$servers = "server1", "server2", "server3"
+
+# Define the threshold for disk space usage
+$threshold = 80
+
+# Loop through each server and check disk space usage
+foreach ($server in $servers) {
+    $disks = Get-WmiObject -ComputerName $server -Class Win32_LogicalDisk -Filter "DriveType = 3"
+    foreach ($disk in $disks) {
+        $freeSpacePercent = [Math]::Round(($disk.FreeSpace / $disk.Size) * 100, 2)
+        if ($freeSpacePercent -lt $threshold) {
+            Write-Host "Server: $server, Drive: $($disk.DeviceID), Free Space: $freeSpacePercent%"
+        }
+    }
+}
+
+
 #update range of pcs for zero-days
 #computers = "OU=Computers,OU=Company,DC=Poobah,DC=com"
 $computers = @("computer1", "computer2", "computer3")
