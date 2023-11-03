@@ -16,6 +16,37 @@ foreach ($server in $servers) {
 }
 
 
+
+#file watcher
+# Define the path of the folder to monitor
+$path = "\\server\share\folder"
+
+# Define the filter for the events to monitor
+$filter = "*"
+
+# Create a new file system watcher
+$watcher = New-Object System.IO.FileSystemWatcher
+$watcher.Path = $path
+$watcher.Filter = $filter
+$watcher.IncludeSubdirectories = $true
+
+# Define the event handler for the created event
+$action = {
+    $path = $Event.SourceEventArgs.FullPath
+    $changeType = $Event.SourceEventArgs.ChangeType
+    $timeStamp = $Event.TimeGenerated
+    $userName = $Event.UserName
+    Write-Host "The file '$path' was $changeType by $userName on $timeStamp"
+}
+
+# Add the event handler to the watcher
+$created = Register-ObjectEvent $watcher Created -Action $action
+
+# Start the watcher
+$watcher.EnableRaisingEvents = $true
+
+
+
 #update range of pcs for zero-days
 #computers = "OU=Computers,OU=Company,DC=Poobah,DC=com"
 $computers = @("computer1", "computer2", "computer3")
