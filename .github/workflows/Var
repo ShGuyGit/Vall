@@ -45,7 +45,26 @@ $created = Register-ObjectEvent $watcher Created -Action $action
 # Start the watcher
 $watcher.EnableRaisingEvents = $true
 
+#copy exe and start install
+# Define the path of the setup file
+$setupFilePath = "C:\path\to\setup\file.exe"
 
+# Define the list of computers to copy the file to
+$computers = @("computer1", "computer2", "computer3")
+
+# Define the destination folder on the remote computers
+$destinationFolder = "C$\path\to\destination\folder"
+
+# Loop through each computer in the list and copy the file
+foreach ($computer in $computers) {
+    # Copy the file to the remote computer
+    Copy-Item -Path $setupFilePath -Destination "\\$computer\$destinationFolder"
+
+    # Start the installation process on the remote computer
+    Invoke-Command -ComputerName $computer -ScriptBlock {
+        Start-Process -FilePath "\\$using:computer\$using:destinationFolder\file.exe" -ArgumentList "/silent", "/install" -Wait
+    }
+}
 
 #update range of pcs for zero-days
 #computers = "OU=Computers,OU=Company,DC=Poobah,DC=com"
