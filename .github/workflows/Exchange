@@ -18,3 +18,90 @@ Set-UserPhoto -Identity "username
 Get-Mailbox <OldDeletedMailBoxYouWantToRecover> -SoftDeletedMailbox | select guid
 Get-Mailbox <NewMailbox> | select guid
 New-MailboxRestoreRequest -SourceMailbox <guid> -TargetMailbox <guid> -AllowLegacyDNMismatch
+
+
+function Check-RequiredModule {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$ModuleName,
+        [string]$MinimumVersion
+    )
+
+    $module = Get-Module -ListAvailable -Name $ModuleName
+    if ($module -and ($MinimumVersion -eq $null -or ($module.Version -ge [version]$MinimumVersion))) {
+        return $true
+    } else {
+        return $false
+    }
+}
+
+# Function to remove a disabled user from all meetings
+function Remove-DisabledUserFromMeetings {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$UserPrincipalName
+    )
+
+    # Check if the Microsoft.Graph module is installed
+    $moduleName = "Microsoft.Graph"
+    if (-not (Check-RequiredModule -ModuleName $moduleName)) {
+        Write-Host "The required module '$moduleName' is not installed. Attempting to install it..."
+        Install-Module -Name $moduleName -Scope CurrentUser -Force -AllowClobber
+    }
+
+    # Connect to Microsoft Graph
+    try {
+        Connect-MgGraph -Scopes "User.ReadWrite.All" -ErrorAction Stop
+    } catch {
+        Write-Error "Failed to connect to Microsoft Graph. Please ensure you have the required permissions."
+        return
+    }
+
+    try {
+        # Get the Azure AD object ID of the user
+        $user = Get-MgUser -Filter "userPrincipalName eq '$UserPrincipalName'" -ErrorAction Stop
+        if (-not $user) {
+            throw "User with UPN $UserPrincipalName not found."
+        }
+
+        $userId = $user.Id
+
+        # Check if the user is disabled
+        if ($user.AccountEnabled -eq $false) {
+            # Get all the user's existing calendar events
+            $events = Get-MgUserEvent -UserId $userId -All -ErrorAction Stop
+            if (-not $events) {
+                throw "No events found for the user $UserPrincipalName."
+            }
+
+            # Loop through each event and remove it
+            foreach ($event in $events) {
+                Remove-MgUserEvent -UserId $userId -EventId $event.Id -Confirm:$false -ErrorAction Stop
+            }
+
+            Write-Host "All meetings removed for disabled user: $UserPrincipalName"
+        } else {
+            Write-Host "The user $UserPrincipalName is not disabled."
+        }
+    } catch {
+        Write-Error "An error occurred: $_"
+    } finally {
+        # Attempt to disconnect the session
+        Disconnect-MgGraph -ErrorAction SilentlyContinue
+    }
+}
+
+# Check if the Microsoft.Graph module is installed
+if (Check-RequiredModule -ModuleName "Microsoft.Graph") {
+    # Invoke the function to remove a disabled user from all meetings
+    # Ensure the UPN is correctly entered
+    $upn = Read-Host "Please enter the user's UPN"
+    if ([string]::IsNullOrWhiteSpace($upn)) {
+        Write-Error "You must enter a valid UPN."
+    } else {
+        Remove-DisabledUserFromMeetings -UserPrincipalName $upn
+    }
+} else {
+    Write-Host "The Microsoft.Graph module is required and not currently installed. Please install the module and rerun the script."
+}
